@@ -6,6 +6,7 @@ sys.path.append('/hydra/cm/firefly/src/fftools/python/display/')
 
 from FireflyClient import *
 
+
 def split(txt, seps):
     default_sep = seps[0]
 
@@ -13,6 +14,7 @@ def split(txt, seps):
     for sep in seps[1:]:
         txt = txt.replace(sep, default_sep)
     return [i.strip() for i in txt.split(default_sep)]
+
 
 def help():
     print(" '>conn' - make socket connection")
@@ -30,135 +32,132 @@ def help():
 
 
 def isExist(reg, xList):
-    res=any(reg in s for s in xList)
+    res = any(reg in s for s in xList)
     return res
 
 
 def handleOneArg(fc, x):
-      if isExist('.fits',xList):
-          fc.showFits(fc.uploadFile(x[0]), 'p1')
-      elif isExist('.tbl',xList):
-         fc.showTable(fc.uploadFile(x[0]))
-      elif isExist('.reg',xList):
-         fc.overlayRegion(fc.uploadFile(xList[0]))
+    if isExist('.fits', xList):
+        fc.showFits(fc.uploadFile(x[0]), 'p1')
+    elif isExist('.tbl', xList):
+        fc.showTable(fc.uploadFile(x[0]))
+    elif isExist('.reg', xList):
+        fc.overlayRegion(fc.uploadFile(xList[0]))
+
 
 def handleTwoArgs(fc, xList):
-    if isExist('.fits',xList)  and isExist('.reg',xList):
-         if 'fits' in xList[0]:
-              fc.showFits(fc.uploadFile(xList[0]))
-              fc.overlayRegion(fc.uploadFile(xList[1]))
-         else:
-              fc.showFits(fc.uploadFile(xList[1]))
-              fc.overlayRegion(fc.uploadFile(xList[0]))
+    if isExist('.fits', xList) and isExist('.reg', xList):
+        if 'fits' in xList[0]:
+            fc.showFits(fc.uploadFile(xList[0]))
+            fc.overlayRegion(fc.uploadFile(xList[1]))
+        else:
+            fc.showFits(fc.uploadFile(xList[1]))
+            fc.overlayRegion(fc.uploadFile(xList[0]))
 
-    elif isExist('.fits',xList) and isExist('.tb1',xList) in xList:
-           if 'fits' in xList[0]:
-                fc.showFits(fc.uploadFile(xList[0]))
-                fc.showTable(fc.uploadFile(xList[1]))
-           else:
-                fc.showFits(fc.uploadFile(xList[1]))
-                fc.showTable(fc.uploadFile(xList[0]))
+    elif isExist('.fits', xList) and isExist('.tb1', xList) in xList:
+        if 'fits' in xList[0]:
+            fc.showFits(fc.uploadFile(xList[0]))
+            fc.showTable(fc.uploadFile(xList[1]))
+        else:
+            fc.showFits(fc.uploadFile(xList[1]))
+            fc.showTable(fc.uploadFile(xList[0]))
 
-    elif isExist('.fits',xList) and  not isExist('.reg',xList) and not isExist('.tbl',xList): #fits argument
-         fc.showFits(fc.uploadFile(xList[0]), plotId=xList[1])
-    elif not isExist('.fits',xList) and isExist('.tbl',xList):
-         fc.showTable(fc.uploadFile(xList[0 ]),xList[1] )
+    elif isExist('.fits', xList) and not isExist('.reg', xList) and not isExist('.tbl', xList):  # fits argument
+        fc.showFits(fc.uploadFile(xList[0]), plotId=xList[1])
+    elif not isExist('.fits', xList) and isExist('.tbl', xList):
+        fc.showTable(fc.uploadFile(xList[0]), xList[1])
+
 
 def handleMultiArgs(fc, xList):
 
-    fIdxL = [xList.index(item) for item in xList if '.fits'  in item]
+    fIdxL = [xList.index(item) for item in xList if '.fits' in item]
     rIdxL = [xList.index(item) for item in xList if '.reg' in item]
-    tIdxL = [xList.index(item) for item in xList if '.tbl'  in item]
-    fIdx=-1
-    rIdx=-1
-    tIdx=-1
-    if (len(fIdxL)==1 ):
-        fIdx=fIdxL[0]
-    if (len(rIdxL)==1 ):
-        rIdx=rIdxL[0]
-    if (len(tIdxL)==1 ):
-        tIdx=tIdxL[0]
+    tIdxL = [xList.index(item) for item in xList if '.tbl' in item]
+    fIdx = -1
+    rIdx = -1
+    tIdx = -1
+    if (len(fIdxL) == 1):
+        fIdx = fIdxL[0]
+    if (len(rIdxL) == 1):
+        rIdx = rIdxL[0]
+    if (len(tIdxL) == 1):
+        tIdx = tIdxL[0]
 
+    if fIdx >= 0 and rIdx >= 0 and tIdx >= 0:
+        fc.showFits(fc.uploadFile(xList[fIdx]))
+        fc.overlayRegion(fc.uploadFile(xList[rIdx]))
+        fc.showTable(fc.uploadFile(xList[tIdx]))
 
-    if fIdx>=0 and rIdx>=0  and tIdx >=0:
-         fc.showFits(fc.uploadFile(xList[fIdx]))
-         fc.overlayRegion(fc.uploadFile(xList[rIdx]))
-         fc.showTable(fc.uploadFile(xList[tIdx ]))
+    elif fIdx >= 0 and rIdx < 0 and tIdx >= 0:
+        fc.showTable(fc.uploadFile(xList[tIdx]))
+        fc.showFits(fc.uploadFile(xList[fIdx]), xList[fIdx+1])
+    elif fIdx >= 0 and tIdx < 0 and rIdx >= 0:
+        fc.showFits(fc.uploadFile(xList[fIdx]), xList[fIdx+1])
+        fc.overlayRegion(fc.uploadFile(xList[rIdx]))
+    elif fIdx >= 0 and rIdx < 0 and tIdx < 0:
+        fc.showFits(fc.uploadFile(xList[fIdx]), xList[fIdx+1], xList[fIdx+2])
 
-    elif fIdx>=0 and rIdx<0  and tIdx>=0:
-         fc.showTable(fc.uploadFile(xList[tIdx ]))
-         fc.showFits(fc.uploadFile(xList[fIdx]), xList[fIdx+1])
-    elif fIdx>=0 and tIdx<0 and rIdx>=0:
-         fc.showFits(fc.uploadFile(xList[fIdx]), xList[fIdx+1])
-         fc.overlayRegion(fc.uploadFile(xList[rIdx]))
-    elif fIdx>=0 and rIdx<0  and tIdx<0:
-         fc.showFits(fc.uploadFile(xList[fIdx]), xList[fIdx+1], xList[fIdx+2])
-
-    elif fIdx<0 and tIdx>=0:
-         fc.showTable(fc.uploadFile(xList[tIdx ]),xList[tIdx+1], xList[tIdx+2] )
-    elif len(xList==4):
-        fc.addExtension(xList[tIdx ], xList[tIdx+1], xList[tIdx+2], xList[tIdx+3])
+    elif fIdx < 0 and tIdx >= 0:
+        fc.showTable(fc.uploadFile(xList[tIdx]), xList[tIdx+1], xList[tIdx+2])
+    elif len(xList == 4):
+        fc.addExtension(xList[tIdx], xList[tIdx+1], xList[tIdx+2], xList[tIdx+3])
     else:
         print('this type of functionality =' + xList + ' is not supported yet')
 
 
-
-true=1
-path= os.getcwd() + '/data/'
+true = 1
+path = os.getcwd() + '/data/'
 
 
 print('===================help info=======================')
 help()
-fc =FireflyClient()
+fc = FireflyClient()
 print('===================================================')
 
 
-
-x=''
-name=None
+x = ''
+name = None
 
 while true:
 
-   x=raw_input("input>")
-   if(x==''):
-       pass
+    x = raw_input("input>")
+    if(x == ''):
+        pass
 
-   fc.addListener(name,x)
-   xList=split(x, (',' ';', ' ') )
+    fc.addListener(name, x)
+    xList = split(x, (',' ';', ' '))
 
-   if x=='-v':
-         print(sys.version_info[0])
-   elif x=='-h':
-         help()
-   elif ('conn' in x):
-         #if fc.isConnected()==0:
-            fc.connect()
-            #fc.run_forever()
-   elif 'browser' in x:
-       args = split(x, (',' ';', ' ') )
-       parm=''
-       if (len(args)>1):
-         for arg in args[1:]:
-             parm=parm+','+arg
+    if x == '-v':
+        print(sys.version_info[0])
+    elif x == '-h':
+        help()
+    elif ('conn' in x):
+        # if fc.isConnected()==0:
+        fc.connect()
+        # fc.run_forever()
+    elif 'browser' in x:
+        args = split(x, (',' ';', ' '))
+        parm = ''
+        if (len(args) > 1):
+            for arg in args[1:]:
+                parm = parm+','+arg
 
-       if len(parm)==0:
-          fc.launchBrowser()
-       else:
-          fc.launchBrowser(parm)
+        if len(parm) == 0:
+            fc.launchBrowser()
+        else:
+            fc.launchBrowser(parm)
 
-   else:
-     n = len(xList)
-     if (n==1):
-         handleOneArg(fc, xList)
+    else:
+        n = len(xList)
+        if (n == 1):
+            handleOneArg(fc, xList)
 
-     elif n==2:
-         handleTwoArgs(fc, xList)
-     else :
-        handleMultiArgs(fc, xList)
+        elif n == 2:
+            handleTwoArgs(fc, xList)
+        else:
+            handleMultiArgs(fc, xList)
 
-
-
-   if x== KeyboardInterrupt:
-      fc.disconnect()
-      fc.session.close()
-      exit()
+    if x == KeyboardInterrupt:
+        fc.disconnect()
+        fc.session.close()
+        exit()

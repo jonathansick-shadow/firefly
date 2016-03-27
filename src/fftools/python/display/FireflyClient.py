@@ -21,18 +21,17 @@ class FireflyClient(WebSocketClient):
     ALL = 'ALL_EVENTS_ENABLED'
 
     # for serializing the RangeValues object - modify when new stretch types added
-    stretchTypeDict={'percent':88,'absolute':90,'zscale':91,'sigma':92}
-    stretchAlgorithmDict={'linear':44, 'log':45,'loglog':46,'equal':47,'squared':48, 'sqrt':49}
+    stretchTypeDict = {'percent': 88, 'absolute': 90, 'zscale': 91, 'sigma': 92}
+    stretchAlgorithmDict = {'linear': 44, 'log': 45, 'loglog': 46, 'equal': 47, 'squared': 48, 'sqrt': 49}
 
-
-    #the constructor, define instance variables for the object
+    # the constructor, define instance variables for the object
     def __init__(self, host=myLocalhost, channel=None):
         if host.startswith('http://'):
             host = host[7:]
         self.thisHost = host
-        url = 'ws://%s/fftools/sticky/firefly/events' % host #web socket url
+        url = 'ws://%s/fftools/sticky/firefly/events' % host  # web socket url
         if channel:
-            url+= '?channelID=%s' % channel
+            url += '?channelID=%s' % channel
         WebSocketClient.__init__(self, url)
         self.urlRoot = 'http://' + host + self.fftoolsCmd
         self.urlBW = 'http://' + self.thisHost + '/fftools/app.html?id=Loader&channelID='
@@ -42,21 +41,18 @@ class FireflyClient(WebSocketClient):
         print 'websocket url:%s' % url
         self.connect()
 
-
     # def opened(self):
     #     print ("Opening websocket connection to fftools")
 
     # def closed(self, code, reason=None):
     #     print ("Closed down", code, reason)
 
-
     def handleEvent(self, ev):
-        for callback, eventIDList  in self.listeners.items():
+        for callback, eventIDList in self.listeners.items():
             if ev['name'] in eventIDList or FireflyClient.ALL in eventIDList:
                 callback(ev)
 
-
-                 #overridde the superclass's method
+                # overridde the superclass's method
     def received_message(self, m):
         ev = json.loads(m.data.decode('utf8'))
         eventName = ev['name']
@@ -70,12 +66,12 @@ class FireflyClient(WebSocketClient):
                 if 'connID' in connInfo:
                     connID = connInfo['connID']
                 seinfo = self.channel
-                if (len(connID) ) > 0:
+                if (len(connID)) > 0:
                     seinfo = connID + '_' + seinfo
 
                 # print ("Connection established: " + seinfo)
                 self.session.cookies['seinfo'] = seinfo
-                #self.onConnected(self.channel)
+                # self.onConnected(self.channel)
             except:
                 print ('from callback exception: ')
                 print (m)
@@ -84,16 +80,16 @@ class FireflyClient(WebSocketClient):
             # print sevent
             self.handleEvent(ev)
 
-    def sendURLAsGet(self,url):
-        response= self.session.get(url)
+    def sendURLAsGet(self, url):
+        response = self.session.get(url)
         # print response.text
         status = json.loads(response.text)
         return status[0]
 
     def isPageConnected(self):
-        ip=socket.gethostbyname(socket.gethostname())
+        ip = socket.gethostbyname(socket.gethostname())
         url = self.urlRoot + '?cmd=pushAliveCheck&ipAddress=%s' % ip
-        retval= self.sendURLAsGet(url)
+        retval = self.sendURLAsGet(url)
         return retval['active']
 
     # def onConnected(self, channel):
@@ -102,24 +98,22 @@ class FireflyClient(WebSocketClient):
     #     webbrowser.open('http://localhost:8080/fftools/app.html?id=Loader&channelID=' + channel)
     #     webbrowser.open(url)
 
-
     @staticmethod
     def createRV(stretchType, lowerValue, upperValue, algorithm,
                  zscaleContrast=25, zscaleSamples=600, zscaleSamplesPerLine=120):
-        retval= None
-        ffc= FireflyClient
-        st= stretchType.lower()
-        a= algorithm.lower()
+        retval = None
+        ffc = FireflyClient
+        st = stretchType.lower()
+        a = algorithm.lower()
         if st in ffc.stretchTypeDict and a in ffc.stretchAlgorithmDict:
-            retval='%d,%f,%d,%f,%d,%d,%d,%d' % \
-                   (ffc.stretchTypeDict[st], lowerValue,
+            retval = '%d,%f,%d,%f,%d,%d,%d,%d' % \
+                (ffc.stretchTypeDict[st], lowerValue,
                     ffc.stretchTypeDict[st], upperValue,
                     ffc.stretchAlgorithmDict[a],
                     zscaleContrast, zscaleSamples, zscaleSamplesPerLine)
         return retval
 
-
-    def makePidParam(self,plotId):
+    def makePidParam(self, plotId):
         return ','.join(plotId) if type(plotId) is list else plotId
 
 
@@ -137,10 +131,9 @@ class FireflyClient(WebSocketClient):
         :return:
         """
         if callback not in self.listeners.keys():
-            self.listeners[callback]= []
+            self.listeners[callback] = []
         if name not in self.listeners[callback]:
             self.listeners[callback].append(name)
-
 
     def removeListener(self, callback, name=ALL):
         """
@@ -152,9 +145,8 @@ class FireflyClient(WebSocketClient):
         if callback in self.listeners.keys():
             if name in self.listeners[callback]:
                 self.listeners[callback].remove(name)
-            if len(self.listeners[callback])==0:
+            if len(self.listeners[callback]) == 0:
                 self.listeners.pop(callback)
-
 
     def waitForEvents(self):
         """
@@ -163,7 +155,6 @@ class FireflyClient(WebSocketClient):
         Event will get called anyway.
         """
         WebSocketClient.run_forever(self)
-
 
     def getFireflyUrl(self, mode=None, channel=None):
         """
@@ -177,10 +168,9 @@ class FireflyClient(WebSocketClient):
             channel = self.channel
 
         url = 'http://' + self.thisHost + '/fftools/minimal.html?id=Loader&channelID='
-        if mode == "full" :
+        if mode == "full":
             url = self.urlBW
         return url + channel
-
 
     def launchBrowser(self, url=None, channel=None, force=False):
         """
@@ -192,14 +182,13 @@ class FireflyClient(WebSocketClient):
         """
         if not channel:
             channel = self.channel
-        if not url :
-            url=self.urlBW
-        doOpen= True if force else not self.isPageConnected()
+        if not url:
+            url = self.urlBW
+        doOpen = True if force else not self.isPageConnected()
         if doOpen:
-            webbrowser.open(self.getFireflyUrl(url,channel))
-        time.sleep(5) # todo: find something better to do than sleeping
+            webbrowser.open(self.getFireflyUrl(url, channel))
+        time.sleep(5)  # todo: find something better to do than sleeping
         return channel
-
 
     def stayConnected(self):
         self.ws.run()
@@ -217,7 +206,6 @@ class FireflyClient(WebSocketClient):
         index = result.text.find('$')
         return result.text[index:]
 
-
     def uploadFitsData(self, stream):
         """
         Upload a FITS file like object to the Firefly server. The method should allows file like data
@@ -226,7 +214,7 @@ class FireflyClient(WebSocketClient):
         :return: status
         """
         url = 'http://' + self.thisHost + '/fftools/sticky/Firefly_FileUpload?preload=true'
-        dataPack= {'data' : stream}
+        dataPack = {'data': stream}
         result = self.session.post(url, files=dataPack)
         index = result.text.find('$')
         return result.text[index:]
@@ -238,17 +226,15 @@ class FireflyClient(WebSocketClient):
         :param stream: a file like object
         :return: status
         """
-        return self.uploadData(stream,'UNKNOWN')
-
+        return self.uploadData(stream, 'UNKNOWN')
 
     def uploadData(self, stream, dataType):
         url = 'http://' + self.thisHost + '/fftools/sticky/Firefly_FileUpload?preload='
-        url+= 'true&type=FITS' if dataType=='FITS' else 'false&type=UNKNOWN'
-        dataPack= {'data' : stream}
+        url += 'true&type=FITS' if dataType == 'FITS' else 'false&type=UNKNOWN'
+        dataPack = {'data': stream}
         result = self.session.post(url, files=dataPack)
         index = result.text.find('$')
         return result.text[index:]
-
 
     def showFits(self, fileOnServer=None, plotId=None, additionalParams=None):
         """ Show a fits image
@@ -262,13 +248,12 @@ class FireflyClient(WebSocketClient):
         """
         url = self.urlRoot + '?cmd=pushFits'
         if additionalParams:
-            url+= '&' + '&'.join(['%s=%s' % (k, v) for (k, v) in additionalParams.items()])
+            url += '&' + '&'.join(['%s=%s' % (k, v) for (k, v) in additionalParams.items()])
         if plotId:
-            url+= '&plotId=%s' % plotId
+            url += '&plotId=%s' % plotId
         if fileOnServer:
-            url+= '&file=%s' % fileOnServer
+            url += '&file=%s' % fileOnServer
         return self.sendURLAsGet(url)
-
 
     def showTable(self, fileOnServer, title=None, pageSize=None, isCatalog=True):
         """
@@ -283,12 +268,12 @@ class FireflyClient(WebSocketClient):
         url = self.urlRoot + "?cmd=pushTable"
 
         if not isCatalog:
-            url+= '&tblType=table'
+            url += '&tblType=table'
         if title:
-            url+= '&Title=%s' % title
+            url += '&Title=%s' % title
         if pageSize:
-            url+= '&pageSize=%s' % str(pageSize)
-        url+= "&file=%s" % fileOnServer
+            url += '&pageSize=%s' % str(pageSize)
+        url += "&file=%s" % fileOnServer
         return self.sendURLAsGet(url)
 
     def showXYPlot(self, fileOnServer, additionalParams=None):
@@ -302,10 +287,9 @@ class FireflyClient(WebSocketClient):
         """
         url = self.urlRoot + "?cmd=pushXYPlot"
         if additionalParams:
-            url+= '&' + '&'.join(['%s=%s' % (k, v) for (k, v) in additionalParams.items()])
-        url+= '&file=%s' % fileOnServer
+            url += '&' + '&'.join(['%s=%s' % (k, v) for (k, v) in additionalParams.items()])
+        url += '&file=%s' % fileOnServer
         return self.sendURLAsGet(url)
-
 
     def addExtension(self, extType, title, plotId, extensionId, image=None):
         """
@@ -318,11 +302,11 @@ class FireflyClient(WebSocketClient):
         :param image: An url of an icon to display the toolbar instead of title
         :return: status of call
         """
-        url = self.urlRoot + "?cmd=pushExt&plotId=%s&id=%s&extType=%s&Title=%s" % (plotId,extensionId,extType,title)
+        url = self.urlRoot + \
+            "?cmd=pushExt&plotId=%s&id=%s&extType=%s&Title=%s" % (plotId, extensionId, extType, title)
         if image:
-            url+= "&image=%s" % image
+            url += "&image=%s" % image
         return self.sendURLAsGet(url)
-
 
     def zoom(self, plotId, factor):
         """
@@ -331,9 +315,8 @@ class FireflyClient(WebSocketClient):
         :param factor: number, zoom factor for the image
         :return:
         """
-        url = self.urlRoot + "?cmd=pushZoom&plotId=%s&zoomFactor=%.3f" % (self.makePidParam(plotId),factor)
+        url = self.urlRoot + "?cmd=pushZoom&plotId=%s&zoomFactor=%.3f" % (self.makePidParam(plotId), factor)
         return self.sendURLAsGet(url)
-
 
     def pan(self, plotId, x, y):
         """
@@ -343,7 +326,8 @@ class FireflyClient(WebSocketClient):
         :param y: number, new center y position to scroll to
         :return:
         """
-        url = self.urlRoot + "?cmd=pushPan&plotId=%s&scrollX=%d&scrollY=%d" % (self.makePidParam(plotId),x,y)
+        url = self.urlRoot + \
+            "?cmd=pushPan&plotId=%s&scrollX=%d&scrollY=%d" % (self.makePidParam(plotId), x, y)
         return self.sendURLAsGet(url)
 
     def stretch(self, plotId, serializedRV):
@@ -353,14 +337,13 @@ class FireflyClient(WebSocketClient):
         :param serializedRV: the range values parameter
         :return:
         """
-        url = self.urlRoot + "?cmd=pushRangeValues&plotId=%s&rangeValues=%s" % (self.makePidParam(plotId),serializedRV)
+        url = self.urlRoot + \
+            "?cmd=pushRangeValues&plotId=%s&rangeValues=%s" % (self.makePidParam(plotId), serializedRV)
         return self.sendURLAsGet(url)
-
 
     #-----------------------------------------------------------------
     # Region Stuff
     #-----------------------------------------------------------------
-
 
     def overlayRegion(self, fileOnServer, title=None, regionLayerId=None, plotId=None):
         """
@@ -376,13 +359,12 @@ class FireflyClient(WebSocketClient):
         """
         url = self.urlRoot + "?cmd=pushRegion&file=%s" % fileOnServer
         if title:
-            url+= '&Title=%s' % title
+            url += '&Title=%s' % title
         if regionLayerId:
-            url+= '&id=%s' % regionLayerId
+            url += '&id=%s' % regionLayerId
         if plotId:
-            url+= '&plotId=%s' % self.makePidParam(plotId)
+            url += '&plotId=%s' % self.makePidParam(plotId)
         return self.sendURLAsGet(url)
-
 
     def removeRegion(self, regionLayerId, plotId=None):
         """
@@ -390,11 +372,10 @@ class FireflyClient(WebSocketClient):
         :param regionLayerId: regionLayer to remove
         :return: status of call
         """
-        url= self.urlRoot +"?cmd=pushRemoveRegion&id=%s" % regionLayerId
+        url = self.urlRoot + "?cmd=pushRemoveRegion&id=%s" % regionLayerId
         if plotId:
-            url+= '&plotId=%s' % self.makePidParam(plotId)
+            url += '&plotId=%s' % self.makePidParam(plotId)
         return self.sendURLAsGet(url)
-
 
     def overlayRegionData(self, regionData, regionLayerId, title=None, plotId=None):
         """
@@ -409,14 +390,12 @@ class FireflyClient(WebSocketClient):
         """
         url = self.urlRoot + "?cmd=pushRegionData&id=%s" % regionLayerId
         if title:
-            url+= '&Title=%s' % title
+            url += '&Title=%s' % title
         if plotId:
-            url+= '&plotId=%s' % self.makePidParam(plotId)
-        response = self.session.post(url, data={'ds9RegionData' : '['+"--STR--".join(regionData)+']'})
+            url += '&plotId=%s' % self.makePidParam(plotId)
+        response = self.session.post(url, data={'ds9RegionData': '['+"--STR--".join(regionData)+']'})
         status = json.loads(response.text)
         return status[0]
-
-
 
     def removeRegionData(self, regionData, regionLayerId):
         """
@@ -427,12 +406,11 @@ class FireflyClient(WebSocketClient):
         """
         url = self.urlRoot + "?cmd=pushRemoveRegionData&id=%s" % regionLayerId
         response = self.session.post(url,
-                                     data={'ds9RegionData' : '['+"--STR--".join(regionData)+']'})
+                                     data={'ds9RegionData': '['+"--STR--".join(regionData)+']'})
         status = json.loads(response.text)
         return status[0]
 
-
-    def addMask(self, maskId,bitNumber,imageNumber,color,plotId,bitDesc=None,fileOnServer=None):
+    def addMask(self, maskId, bitNumber, imageNumber, color, plotId, bitDesc=None, fileOnServer=None):
         """
         Add a mask layer
         :param maskId: id of mask
@@ -446,22 +424,21 @@ class FireflyClient(WebSocketClient):
         """
         url = self.urlRoot + "?cmd=pushAddMask"
 
-        params= {
-           'id'        : maskId,
-           'bitNumber' : bitNumber,
-           'color'     : color,
-           'plotId'    : plotId,
-           'imageNumber' : imageNumber,
+        params = {
+            'id': maskId,
+            'bitNumber': bitNumber,
+            'color': color,
+            'plotId': plotId,
+            'imageNumber': imageNumber,
         }
         if bitDesc:
-            params['bitDesc']= bitDesc
+            params['bitDesc'] = bitDesc
         if fileOnServer:
-            params['fileKey']= fileOnServer
+            params['fileKey'] = fileOnServer
         response = self.session.post(url, data=params)
         status = json.loads(response.text)
         return status[0]
         # return self.sendURLAsGet(url)
-
 
     def removeMask(self, maskId):
         """
@@ -471,7 +448,6 @@ class FireflyClient(WebSocketClient):
         """
         url = self.urlRoot + "?cmd=pushRemoveMask&id=%s" % maskId
         return self.sendURLAsGet(url)
-
 
     #-----------------------------------------------------------------
     # Range Values
@@ -486,14 +462,13 @@ class FireflyClient(WebSocketClient):
         :param upperValue: number, upper end of stretch
         :return: a serialized range values string
         """
-        retval= FireflyClient.createRV(stretchType,lowerValue,upperValue,algorithm,25,600,120)
-        ffc= FireflyClient
+        retval = FireflyClient.createRV(stretchType, lowerValue, upperValue, algorithm, 25, 600, 120)
+        ffc = FireflyClient
         if not retval:
-            t= stretchType if stretchType.lower() in ffc.stretchAlgorithmDict else 'percent'
-            a= algorithm if algorithm.lower() in ffc.stretchAlgorithmDict else 'linear'
-            retval= FireflyClient.createRV(t,1,99,a)
+            t = stretchType if stretchType.lower() in ffc.stretchAlgorithmDict else 'percent'
+            a = algorithm if algorithm.lower() in ffc.stretchAlgorithmDict else 'linear'
+            retval = FireflyClient.createRV(t, 1, 99, a)
         return retval
-
 
     @staticmethod
     def createRangeValuesZScale(algorithm, zscaleContrast=25, zscaleSamples=600, zscaleSamplesPerLine=120):
@@ -504,10 +479,11 @@ class FireflyClient(WebSocketClient):
         :param zscaleSamplesPerLine: zscale sample per line
         :return: a serialized range values string
         """
-        retval= FireflyClient.createRV('zscale',1,2,algorithm,zscaleContrast, zscaleSamples, zscaleSamplesPerLine)
+        retval = FireflyClient.createRV('zscale', 1, 2, algorithm, zscaleContrast,
+                                        zscaleSamples, zscaleSamplesPerLine)
         if not retval:
-            a= algorithm if algorithm.lower() in FireflyClient.stretchAlgorithmDict else 'linear'
-            retval= FireflyClient.createRV('zscale',1,2,a,25,600,120)
+            a = algorithm if algorithm.lower() in FireflyClient.stretchAlgorithmDict else 'linear'
+            retval = FireflyClient.createRV('zscale', 1, 2, a, 25, 600, 120)
         return retval
 
 

@@ -90,7 +90,7 @@ try:
     taskParams = None
     if (options.infile):
         print 'Input file: '+options.infile
-        with open(options.infile) as paramfile:    
+        with open(options.infile) as paramfile:
             taskParams = json.load(paramfile)
             print json.dumps(taskParams)
     print 'Work directory: '+options.workdir
@@ -105,11 +105,11 @@ try:
         print 'Output: json'
     else:
         print 'Output: table'
-    
-    out = {}     
+
+    out = {}
     if (os.path.isdir(options.outdir)):
         if isImageTask:
-            # sample fits file return 
+            # sample fits file return
             (fd, outfile) = tempfile.mkstemp(suffix='.fits', prefix=options.task, dir=options.outdir)
             src = '/hydra/cm/firefly/src/fftools/test/data/c.fits'
             copyfile(src, outfile)
@@ -120,17 +120,17 @@ try:
             histdata = None
             if taskParams is None:
                 out['out'] = 'something'
-            else:    
-                for attr,v  in taskParams.items():
-                    if (attr=="numbins"):
-                        #genarate histogram data
+            else:
+                for attr, v in taskParams.items():
+                    if (attr == "numbins"):
+                        # genarate histogram data
                         numbins = v
                         data = numpy.random.random(5000)
                         bins = numpy.linspace(0, 1, numbins+1)
-                        histdata=zip(numpy.histogram(data, bins)[0],bins,bins[1:numbins+1])
-                        break  
+                        histdata = zip(numpy.histogram(data, bins)[0], bins, bins[1:numbins+1])
+                        break
                     else:
-                        out[attr+'_out']=v
+                        out[attr+'_out'] = v
             (fd, outfile) = tempfile.mkstemp(suffix='.json', prefix=options.task, dir=options.outdir)
             f = os.fdopen(fd, "w")
             if histdata is None:
@@ -139,31 +139,32 @@ try:
                 json.dump(histdata, f)
         else:
             # sample table - generate histogram data file
-            numbins=50
+            numbins = 50
             data = numpy.random.random(1000)
             bins = numpy.linspace(0, 1, numbins+1)
-            tosave=zip(numpy.histogram(data, bins)[0],bins,bins[1:numbins+1])
+            tosave = zip(numpy.histogram(data, bins)[0], bins, bins[1:numbins+1])
             (fd, outfile) = tempfile.mkstemp(suffix='.csv', prefix=options.task, dir=options.outdir)
-            numpy.savetxt(outfile, tosave, delimiter=',', comments='', header='numbins,binmin,binmax', fmt='%d,%.2f,%.2f')
+            numpy.savetxt(outfile, tosave, delimiter=',', comments='',
+                          header='numbins,binmin,binmax', fmt='%d,%.2f,%.2f')
 
         print 'Writing output to '+outfile
 
     else:
         errors.extend(("Output directory does not exist.", "Can not create output."))
 except Exception as e:
-    errors.extend((e.__doc__, str(e))) 
-       
+    errors.extend((e.__doc__, str(e)))
+
 # required output
 print options.separator
 if errors:
     status = {
-        'error' : ' '.join(errors)
+        'error': ' '.join(errors)
     }
     print json.dumps(status)
     sys.exit(1)
 else:
     status = {
-        'outfile' : outfile
+        'outfile': outfile
     }
     print json.dumps(status)
     sys.exit(0)
